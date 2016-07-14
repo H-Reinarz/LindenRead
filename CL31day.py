@@ -84,3 +84,19 @@ with open(file, "r") as f:
 
 for k, v in klasse.records.items():
   print(k,v)
+
+
+#ts = ("01", "30", "04")
+def ts_decode(time_stamp):
+    s = int(time_stamp[2])
+    ms = int(time_stamp[1]) * 60
+    hs = int(time_stamp[0]) * 3600
+    return(hs + ms + s)
+
+for k, v in klasse.records.items():
+    if ts_decode(start) <= ts_decode(k) <= ts_decode(end):
+        if v[1] == "CLEAR":
+            #WORK IN PROGRESS
+            pass
+
+
