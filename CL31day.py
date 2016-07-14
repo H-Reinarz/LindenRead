@@ -24,18 +24,22 @@ class CL31day:
 
         for t in range (0,len(data)): #Run until last row of file (EOF)
         #for t in range (0,300): #Run until last row of file (EOF)
-            entries = ["NA","NA","NA","NA","NA","NA"]
+
+                      #Date,Type,Frag,CB1,CB2,CB3
+            entries = [None,None,None,None,None,None]
+
             if data[t].find('Beginn:') != -1: # IF "Beginn: is found within the entry
                 #Date and Time
                 data[t]=data[t].strip("Beginn: ") #remove Beginn frm string
                 data[t]=data[t].strip("\n") #remove New-Line character
                 date_time= data[t] #Define remaining data as Date
+
                 #print date_time
-                date = date_time[0:10]
-                time = date_time[12:20]
-                #Save to List
-                entries[0] = date
-                entries[1] = time
+                entries[0] = date_time[0:10]
+
+                #Time stamp = Dict Key!!!
+                timestring = date_time[12:20]
+                time_stamp = tuple(timestring.split(":"))
 
 
 
@@ -44,7 +48,7 @@ class CL31day:
                 #print status
                 count=data[t+2][0]
                 if(count=="0"): #Zero means no Cloudbase detected
-                       entries[2] = "CLEAR"
+                       entries[1] = "CLEAR"
 
                 if(count=="1"): #one cloudbase
                     cloudbase=data[t+2][4:8]
@@ -72,13 +76,12 @@ class CL31day:
                     entries[5] = cloudbase_g
 
                 if(count=="4"): # 4 in Fog (No cloudbase will be measured.... vertical visibility instead), Full obscuration
-                   entries[2] = "FOG"
+                   entries[1] = "FOG"
                    #print data[t+2]
                 if(count=="5"): #5 in Fog (No cloudbase will be measured.... vertical visibility instead), Partly opaque
-                    entries[2] = "FOG"
+                    entries[1] = "FOG"
                     #print data[t+2]
 
+                self.records[time_stamp] = entries
 
-            #Create CSV-Line
-            sep = ","
-            csv_line = sep.join(entries)
+
