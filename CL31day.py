@@ -41,6 +41,7 @@ class CL31day:
             if data[t].startswith('Beginn:'): # IF "Beginn: is found within the entry
                 #Date
                 entries[0] = data[t][8:18]
+                self.date = data[t][8:18]
 
                  #Time stamp = Dict Key!!!
                 timestring = data[t][19:len(data[t])-1]
@@ -56,27 +57,27 @@ class CL31day:
                 if(count=="1"): #one cloudbase
                     cloudbase=data[t+2][4:8]
                     #print cloudbase
-                    entries[3] = cloudbase
+                    entries[3] = int(cloudbase)
 
                 if(count=="2"): #two cloudbases
                     cloudbase=data[t+2][4:8]
                     #print cloudbase
-                    entries[3] = cloudbase
+                    entries[3] = int(cloudbase)
 
                     cloudbase_t=data[t+2][10:14]
                     #print cloudbase_t
-                    entries[4] = cloudbase_t
+                    entries[4] = int(cloudbase_t)
 
                 if(count=="3"): # three cloudbases
                     cloudbase=data[t+2][4:8]
                     #print cloudbase
-                    entries[3] = cloudbase
+                    entries[3] = int(cloudbase)
                     cloudbase_t=data[t+2][10:14]
                     #print cloudbase_t
-                    entries[4] = cloudbase_t
+                    entries[4] = int(cloudbase_t)
                     cloudbase_g=data[t+2][16:20]
                     #print cloudbase_g
-                    entries[5] = cloudbase_g
+                    entries[5] = int(cloudbase_g)
 
                 if(count=="4"): # 4 in Fog (No cloudbase will be measured.... vertical visibility instead), Full obscuration
                    entries[1] = "FOG"
@@ -88,19 +89,19 @@ class CL31day:
                 self.records[time_stamp] = entries
 
 
+
         #COMPUTE CLEAR DIFF
         clear_d = OrderedDict()
         for k, v in self.records.items():
             k_dec = ts_decode(k)
-            if ts_decode(start) <= k_dec <= ts_decode(end):
-                if v[1] == "CLEAR":
-                    clear_d[k] = k_dec
+            if v[1] == "CLEAR":
+                clear_d[k] = k_dec
 
 
         cld_keys = [k for k in clear_d.keys()]
         print(cld_keys)
         for  x, k  in enumerate(cld_keys):
-            if x + 1 == len(cld_keys):
+            if x + 1 >= len(cld_keys):
                 break
             else:
                 minuend = clear_d[cld_keys[x+1]]
@@ -112,6 +113,31 @@ class CL31day:
 
     def compute_stats(self, start=("00","00","00"), end=("23","59","59")):
         """Computes the statistics for the records and stores them as attributes."""
+
+        #Class to contain the statistics
+        class CL31stats:
+            def __init__(self, types, cleardiff, cb1):
+                #TYPES
+                self.clear = types.count("CLEAR")
+                self.fog = types.cont("FOG")
+
+                #CLEARDIFF
+                values = [v for v in cleardiff if v != None]
+                #calc median
+                values.sort()
+                hl = (len(values)//2)
+                if len(values)%2 == 0:
+                    self.clear_diff = values[0:hl]
+                elif len(values)%2 == 1:
+                    value = (values[hl] + values[hl-1])/2
+                    self.clear_diff = round(value)
+                else:
+                    #Insert exception
+                    pass
+
+                #CLOUDBASE
+
+
 
         #Get the relevant entries
         stat_dict = OrderedDict()
@@ -128,10 +154,13 @@ class CL31day:
             CLEARDIFF.append(k[2])
             CB1.append(k[3])
 
-        #Class to contain the statistics
-        class CL31stats:
-            def __init__(self, CLEAR, FOG, CLEARDIFF, CB):
-                #WORK IN PROGRESS
+
+
+
+
+
+
+
 
 
 
