@@ -25,6 +25,7 @@ tar = tarfile.open(fileobj=f)
 for member in tar.getmembers():
     t = tar.extractfile(member)
     data = [x.decode("utf_8") for x in t.readlines()]
+
     for x in range(0,11):
         print(data[x])
 
