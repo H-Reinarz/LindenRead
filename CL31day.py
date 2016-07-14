@@ -119,10 +119,22 @@ class CL31day:
             if ts_decode(start) <= ts_decode(k) <= ts_decode(end):
                 stat_dict[k] = v
 
-
+        #Convert to lists
+        TYPES = []
+        CB1 = []
+        CLEARDIFF = []
         for k, v in stat_dict.items():
-            #WORK IN PROGRESS
-            pass
+            TYPES.append(k[1])
+            CLEARDIFF.append(k[2])
+            CB1.append(k[3])
+
+        #Class to contain the statistics
+        class CL31stats:
+            def __init__(self, CLEAR, FOG, CLEARDIFF, CB):
+                #WORK IN PROGRESS
+
+
+
 
 
 
