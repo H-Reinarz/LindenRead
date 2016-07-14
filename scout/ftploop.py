@@ -2,12 +2,12 @@ from ftplib import FTP
 import tarfile
 from io import BytesIO
 
-
 ftp = FTP('')     
 ftp.login("","")
 ftp.pwd()
 print(ftp.pwd())
 
+# FTP Class
 class FTPList:
 
     def __init__(self, instr, years="all", months="all", days="all"):
@@ -21,8 +21,10 @@ class FTPList:
     def ShowYears(self):
         ftp.cwd(self.instr)
         ftp.retrlines('LIST')
+        ftp.cwd("/")
     
     def GetList(self):
+
         dic = {}
         yearList = []
         fileList = []
@@ -40,29 +42,39 @@ class FTPList:
                 
             
             return (dic)
-        
-            
 
+# Run
+klasse = FTPList("cl31")
+cl31Dic = klasse.GetList()
+
+
+# Test Run for all days of 2014
+ftp.cwd("2014")
+for fileArchive in cl31Dic["2014"]:
+    f = BytesIO()
+    theFile = ftp.retrbinary("RETR "+fileArchive,f.write)
+    f.seek(0)
+    tar = tarfile.open(fileobj=f)
+    
+    t = tar.extractfile(tar.getmembers()[0])
+    data = [x.decode("utf_8") for x in t.readlines()]
+
+    #Test
+    print(fileArchive)
+    print(data[0:5])
+    
+
+# Original Loop
+##for years in cl31Dict:
+##        
+##    for fileArchive in years:
+##        f = BytesIO()
+##        theFile = ftp.retrbinary("RETR "+fileArchive,f.write)
+##        f.seek(0)
+##        tar = tarfile.open(fileobj=f)
+##        
+##        t = tar.extractfile(tar.getmembers()[0])
+##        data = [x.decode("utf_8") for x in t.readlines()]
 
 		
 		
-		
-# Old Code
-#f = BytesIO()
-
-#theFile = ftp.retrbinary("RETR CL31msg2_20081231.txt.tar",f.write)
-
-#f.seek(0)
-
-#tar = tarfile.open(fileobj=f)
-
-#for member in tar.getmembers():
-    #t = tar.extractfile(member)
-    #data = [x.decode("utf_8") for x in t.readlines()]
-    #for x in range(0,11):
-     #   print(data[x])
-
-
-#ftp.close()
-
-
