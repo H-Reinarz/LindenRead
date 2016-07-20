@@ -32,8 +32,8 @@ class CL31day:
 
         self.records = OrderedDict()
 
-        #for t in range (0,len(data)): #Run until last row of file (EOF)
-        for t in range (0,300): #Run until last row of file (EOF)
+        for t in range (0,len(data)): #Run until last row of file (EOF)
+##        for t in range (0,300): #Run until last row of file (EOF)
 
                       #Date,Type,Frag,CB1,CB2,CB3
             entries = [None,None,None,None,None,None]
@@ -80,10 +80,10 @@ class CL31day:
                     entries[5] = int(cloudbase_g)
 
                 if(count=="4"): # 4 in Fog (No cloudbase will be measured.... vertical visibility instead), Full obscuration
-                   entries[1] = "FOG"
+                   entries[1] = "FO"
                    #print data[t+2]
                 if(count=="5"): #5 in Fog (No cloudbase will be measured.... vertical visibility instead), Partly opaque
-                    entries[1] = "FOG"
+                    entries[1] = "OPQ"
                     #print data[t+2]
 
                 self.records[time_stamp] = entries
@@ -99,7 +99,7 @@ class CL31day:
 
 
         cld_keys = [k for k in clear_d.keys()]
-        print(cld_keys)
+##        print(cld_keys)
         for  x, k  in enumerate(cld_keys):
             if x + 1 >= len(cld_keys):
                 break
@@ -116,26 +116,69 @@ class CL31day:
 
         #Class to contain the statistics
         class CL31stats:
-            def __init__(self, types, cleardiff, cb1):
+
+            def median(collection):
+                #calc median
+                if len(collection) != 0:
+                    collection.sort()
+                    hl = (len(collection)//2)
+                    if len(collection)%2 == 0:
+                        self.clear_diff = collection[0:hl]
+                    elif len(collection)%2 == 1:
+                        value = (collection[hl] + collection[hl-1])/2
+                        return round(value)
+                    else:
+                        #Insert exception
+                        return None
+                else:
+                    #list is empty
+                    return None
+
+
+            def __init__(self, types, cleardiff, cb1, cb2, cb3):
                 #TYPES
                 self.clear = types.count("CLEAR")
-                self.fog = types.cont("FOG")
+                self.fo = types.count("FO")
+                self.opq = types.count("OPQ")
 
                 #CLEARDIFF
-                values = [v for v in cleardiff if v != None]
-                #calc median
-                values.sort()
-                hl = (len(values)//2)
-                if len(values)%2 == 0:
-                    self.clear_diff = values[0:hl]
-                elif len(values)%2 == 1:
-                    value = (values[hl] + values[hl-1])/2
-                    self.clear_diff = round(value)
-                else:
-                    #Insert exception
-                    pass
+                self.cd_median = CL31stats.median(cleardiff)
 
-                #CLOUDBASE
+                #CLOUDBASES
+                #Median
+                self.cb1_median = CL31stats.median(cb1)
+                self.cb2_median = CL31stats.median(cb2)
+                self.cb3_median = CL31stats.median(cb3)
+
+                #Mode for CB1
+                #count in dictionary
+                counter = {}
+                for cb in cb1:
+                    if cb not in counter:
+                        counter[cb] = 0
+                    counter[cb] += 1
+
+                #invert dictionary to find maximum
+                counter = {v: k for k, v in counter.items()}
+                #return maximum count as mode
+                self.cb1_mode = counter[max(counter.keys())]
+
+                #Minimum/Maximum for CB1
+                self.cb1_min = min(cb1)
+                self.cb1_max = max(cb1)
+
+    #Headerstring for file output
+    def write_header(self, seperator=","):
+        fields = ('"CLEAR"', '"FO"', '"OPQ"', '"CD_MEDIAN"', '"CB1_MEDIAN"', '"CB1_MODE"', '"CB1_MIN"', '"CB1_MAX"', '"CB2_MEDIAN"', '"CB3_MEDIAN"')
+
+        return seperator.join(fields)
+
+    #Return a seperated string of the attributes for file output
+    def sep_string(self, sperator=","):
+        elements = []
+        return
+
+
 
 
 
@@ -147,12 +190,27 @@ class CL31day:
 
         #Convert to lists
         TYPES = []
-        CB1 = []
         CLEARDIFF = []
-        for k, v in stat_dict.items():
-            TYPES.append(k[1])
-            CLEARDIFF.append(k[2])
-            CB1.append(k[3])
+        CB1 = []
+        CB2 = []
+        CB3 = []
+        for v in stat_dict.values():
+            TYPES.append(v[1])
+            CLEARDIFF.append(v[2])
+            CB1.append(v[3])
+            CB2.append(v[4])
+            CB3.append(v[5])
+        #remove Nones
+        TYPES = [v for v in TYPES if v != None]
+        CLEARDIFF = [v for v in CLEARDIFF if v != None]
+        CB1 = [v for v in CB1 if v != None]
+        CB2 = [v for v in CB2 if v != None]
+        CB3 = [v for v in CB3 if v != None]
+
+        #Return the statistcs as an attribute
+        self.stats = CL31stats(TYPES, CLEARDIFF, CB1, CB2, CB3)
+        return
+
 
 
 
@@ -199,8 +257,8 @@ with open(file, "r") as f:
 ##        diff = int(((minuend - substrahend)/20 -1))
 ##        klasse.records[k][2] = diff
 
-for k, v in klasse.records.items():
-  print(k, v)
+##for k, v in klasse.records.items():
+##  print(k, v)
 
 
 
