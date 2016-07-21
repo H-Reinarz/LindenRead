@@ -10,7 +10,7 @@
 #-------------------------------------------------------------------------------
 
 from collections import OrderedDict
-
+import os
 
 def ts_decode(time_stamp):
     """Function to convert tuple time stamp to
@@ -26,8 +26,27 @@ class CL31day:
     """Class representing a whole day of records from the instrument.
     The class stores the raw data and contains methods for calculating stats."""
 
-    def __init__(self, filename, data):
-        self.filename = filename
+    #Class variables: Header information for various outputs
+    #Records
+    rec_fields = ("DATE", "TIME", "TYPE", "CLEAR_DIFF", "CB1", "CB2", "CB3")
+
+    #Stats
+    stats_meta = ("FILE","YEAR", "MONTH", "DAY")
+    stats_fields = ("START", "END", "MEASUREMENTS", "CLEAR", "FO", "OPQ", "CD_MEDIAN", "CB1", "CB1_MIN", "CB1_MAX", "CB1_MEDIAN", "CB1_MODE", "CB2", "CB2_MEDIAN", "CB3", "CB3_MEDIAN")
+
+    #Class Methods
+    #Headerstring for file output
+    def write_record_header(seperator=","):
+        return seperator.join(rec_fields)
+
+    #Headerstring for file output
+    def write_stats_header(seperator=","):
+        return seperator.join(stats_meta + stats_fields)
+
+
+
+    def __init__(self, file, data):
+        self.filename = os.path.basename(file)
 
 
         self.records = OrderedDict()
@@ -123,7 +142,7 @@ class CL31day:
                     collection.sort()
                     hl = (len(collection)//2)
                     if len(collection)%2 == 0:
-                        self.clear_diff = collection[0:hl]
+                        return collection[hl-1]
                     elif len(collection)%2 == 1:
                         value = (collection[hl] + collection[hl-1])/2
                         return round(value)
@@ -136,6 +155,12 @@ class CL31day:
 
 
             def __init__(self, types, cleardiff, cb1, cb2, cb3):
+
+                #TIME WINDOW
+                self.start = start
+                self.end = end
+                self.measurements = len(stat_dict)
+
                 #TYPES
                 self.clear = types.count("CLEAR")
                 self.fo = types.count("FO")
@@ -145,6 +170,11 @@ class CL31day:
                 self.cd_median = CL31stats.median(cleardiff)
 
                 #CLOUDBASES
+                #Count
+                self.cb1 = len(cb1)
+                self.cb2 = len(cb2)
+                self.cb3 = len(cb3)
+
                 #Median
                 self.cb1_median = CL31stats.median(cb1)
                 self.cb2_median = CL31stats.median(cb2)
@@ -166,20 +196,6 @@ class CL31day:
                 #Minimum/Maximum for CB1
                 self.cb1_min = min(cb1)
                 self.cb1_max = max(cb1)
-
-    #Headerstring for file output
-    def write_header(self, seperator=","):
-        fields = ('"CLEAR"', '"FO"', '"OPQ"', '"CD_MEDIAN"', '"CB1_MEDIAN"', '"CB1_MODE"', '"CB1_MIN"', '"CB1_MAX"', '"CB2_MEDIAN"', '"CB3_MEDIAN"')
-
-        return seperator.join(fields)
-
-    #Return a seperated string of the attributes for file output
-    def sep_string(self, sperator=","):
-        elements = []
-        return
-
-
-
 
 
         #Get the relevant entries
@@ -212,6 +228,17 @@ class CL31day:
         return
 
 
+
+    #Return a seperated string of the attributes for file output
+    def write_stat_string(self, seperator=","):
+        year = self.filename[9:13]
+        month = self.filename[13:15]
+        day = self.filename[15:17]
+
+        field_strings = [str(self.stats.__getattr__(f.lower())) for f in stats_fields]
+
+        meta_strings = [self.filename, year, month, day]
+        return seperator.join(meta_strings + field_strings)
 
 
 
