@@ -41,7 +41,7 @@ class CL31day:
 
     #Headerstring for file output
     def write_stats_header(seperator=","):
-        return seperator.join(stats_meta + stats_fields)
+        return seperator.join(CL31day.stats_meta + CL31day.stats_fields)
 
 
 
@@ -231,13 +231,24 @@ class CL31day:
 
     #Return a seperated string of the attributes for file output
     def write_stat_string(self, seperator=","):
+        #Get date elements from filename
         year = self.filename[9:13]
         month = self.filename[13:15]
         day = self.filename[15:17]
 
-        field_strings = [str(self.stats.__getattr__(f.lower())) for f in stats_fields]
+        #Convert complex elements to writable strings
+        field_dict = {f: self.stats.__getattribute__(f.lower()) for f in CL31day.stats_fields}
+        field_dict["START"] = ":".join(field_dict["START"])
+        field_dict["END"] = ":".join(field_dict["END"])
+        for  k, v in field_dict.items():
+            print(v)
+            if v == None:
+                field_dict[k] = "NA"
 
+        field_strings = [str(field_dict[f]) for f in CL31day.stats_fields]
         meta_strings = [self.filename, year, month, day]
+
+        #Return the complete line
         return seperator.join(meta_strings + field_strings)
 
 
@@ -258,7 +269,14 @@ file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
 
+print(klasse.filename)
+klasse.compute_stats()
 
+output = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\stat_test.csv"
+with open(output, "w") as out:
+    out.write(CL31day.write_stats_header())
+    out.write("\n")
+    out.write(klasse.write_stat_string())
 
 
 ##start = ("00", "05", "00")
