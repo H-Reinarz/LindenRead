@@ -181,21 +181,28 @@ class CL31day:
                 self.cb3_median = CL31stats.median(cb3)
 
                 #Mode for CB1
-                #count in dictionary
-                counter = {}
-                for cb in cb1:
-                    if cb not in counter:
-                        counter[cb] = 0
-                    counter[cb] += 1
+                if len(cb1) != 0:
+                    #count in dictionary
+                    counter = {}
+                    for cb in cb1:
+                        if cb not in counter:
+                            counter[cb] = 0
+                        counter[cb] += 1
 
-                #invert dictionary to find maximum
-                counter = {v: k for k, v in counter.items()}
-                #return maximum count as mode
-                self.cb1_mode = counter[max(counter.keys())]
-
+                    #invert dictionary to find maximum
+                    counter = {v: k for k, v in counter.items()}
+                    #return maximum count as mode
+                    self.cb1_mode = counter[max(counter.keys())]
+                else:
+                    self.cb1_mode = None
                 #Minimum/Maximum for CB1
-                self.cb1_min = min(cb1)
-                self.cb1_max = max(cb1)
+                if len(cb1) != 0:
+                    self.cb1_min = min(cb1)
+                    self.cb1_max = max(cb1)
+                else:
+                    self.cb1_min = None
+                    self.cb1_max = None
+
 
 
         #Get the relevant entries
@@ -241,7 +248,7 @@ class CL31day:
         field_dict["START"] = ":".join(field_dict["START"])
         field_dict["END"] = ":".join(field_dict["END"])
         for  k, v in field_dict.items():
-            print(v)
+            #print(v)
             if v == None:
                 field_dict[k] = "NA"
 
@@ -264,46 +271,73 @@ class CL31day:
 
 
 
-
-file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
-with open(file, "r") as f:
-   klasse = CL31day(file, f.readlines())
-
-print(klasse.filename)
-klasse.compute_stats()
-
-output = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\stat_test.csv"
-with open(output, "w") as out:
-    out.write(CL31day.write_stats_header())
-    out.write("\n")
-    out.write(klasse.write_stat_string())
-
-
-##start = ("00", "05", "00")
+#Test
+##file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
+##with open(file, "r") as f:
+##   klasse = CL31day(file, f.readlines())
 ##
-##end = ("01", "05", "00")
+##print(klasse.filename)
+##klasse.compute_stats()
 ##
-##clear_d = OrderedDict()
-##for k, v in klasse.records.items():
-##    k_dec = ts_decode(k)
-##    if ts_decode(start) <= k_dec <= ts_decode(end):
-##        if v[1] == "CLEAR":
-##            clear_d[k] = k_dec
-##
-##
-##cld_keys = [k for k in clear_d.keys()]
-##print(cld_keys)
-##for  x, k  in enumerate(cld_keys):
-##    if x + 1 == len(cld_keys):
-##        break
-##    else:
-##        minuend = clear_d[cld_keys[x+1]]
-##        substrahend = clear_d[cld_keys[x]]
-##        diff = int(((minuend - substrahend)/20 -1))
-##        klasse.records[k][2] = diff
+##output = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\stat_test.csv"
+##with open(output, "w") as out:
+##    out.write(CL31day.write_stats_header())
+##    out.write("\n")
+##    out.write(klasse.write_stat_string())
 
-##for k, v in klasse.records.items():
-##  print(k, v)
+
+import tarfile
+
+sun_dict = {1: [('07', '20', '00'), ('15', '50', '00')],
+            2: [('06', '37', '00'), ('16', '40', '00')],
+            3: [('05', '35', '00'), ('17', '32', '00')],
+            4: [('04', '30', '00'), ('18', '20', '00')],
+            5: [('03', '36', '00'), ('19', '10', '00')],
+            6: [('03', '15', '00'), ('19', '37', '00')],
+            7: [('03', '32', '00'), ('19', '30', '00')],
+            8: [('04', '15', '00'), ('18', '40', '00')],
+            9: [('05', '00', '00'), ('17', '35', '00')],
+            10: [('05', '50', '00'), ('16', '30', '00')],
+            11: [('06', '40', '00'), ('15', '40', '00')],
+            12: [('07', '20', '00'), ('15', '25', '00')]}
+
+
+cl31_dir = "w:/Bendix/CL31/TEXT"
+
+stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016.csv"
+##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_sun.csv"
+
+with open(stats_file, "w") as s:
+    s.write(CL31day.write_stats_header())
+    s.write("\n")
+
+    skipped = []
+    for root, sub, files in os.walk(cl31_dir):
+        base_dir = os.path.basename(root)
+        print(base_dir)
+        if  base_dir == "2008" or base_dir == "2009":
+            continue
+        for file in files:
+            filename = os.path.join(root, file)
+
+            print(filename)
+            with open(filename, "r") as raw:
+                try:
+                    raw_data = raw.readlines()
+                except:
+                    print("SKIPPED ", file, " !!!")
+                    skipped.append(file)
+                    continue
+
+                #get sunrise and sunset times for the month
+                month = int(file[13:15])
+                srise = sun_dict[month][0]
+                sset = sun_dict[month][1]
+
+                Klasse = CL31day(filename, raw_data)
+                Klasse.compute_stats(srise, sset)
+                s.write(Klasse.write_stat_string())
+                s.write("\n")
 
 
 
