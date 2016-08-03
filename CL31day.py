@@ -51,59 +51,75 @@ class CL31day:
 
         self.records = OrderedDict()
 
-        for t in range (0,len(data)): #Run until last row of file (EOF)
-##        for t in range (0,300): #Run until last row of file (EOF)
+        for x, line in enumerate(data): #Run until last row of file (EOF)
 
                       #Date,Type,Frag,CB1,CB2,CB3
             entries = [None,None,None,None,None,None]
 
-            if data[t].startswith('Beginn:'): # IF "Beginn: is found within the entry
-                #Date
-                entries[0] = data[t][8:18]
-                self.date = data[t][8:18]
+            end = len(line) - 1
+            if line.startswith('Beginn'): # IF "Beginn is found within the entry
+                if line.startswith("Beginn: "):
+                    stamp = line[8:end].split(" ")
+                    date = stamp[0]
+                else:
+                    stamp = line[6:end]
+                    if stamp.__contains__(" "):
+                        stamp = stamp.split(" ")
+                    else:
+                        split = stamp.find(":")-2
+                        stamp = [stamp[0:split], stamp[split:len(stamp)]]
+                    date = stamp[0].split(".")
+                    if len(date[2]) == 2:
+                        year = str(int(date[2]) + 2000)
+                        date[2] = year
+                    date = ".".join(date)
 
+
+
+                #Date
+                entries[0] = date
+                self.date = date
                  #Time stamp = Dict Key!!!
-                timestring = data[t][19:len(data[t])-1]
-                time_stamp = tuple(timestring.split(":"))
+                time_stamp = tuple(stamp[1].split(":"))
 
                 #Measurements
-                status=data[t+2]    #Take next entry as
+                status=data[x+2]    #Take next entry as
                 #print status
-                count=data[t+2][0]
+                count=status[0]
                 if(count=="0"): #Zero means no Cloudbase detected
                        entries[1] = "CLEAR"
 
                 if(count=="1"): #one cloudbase
-                    cloudbase=data[t+2][4:8]
+                    cloudbase=status[4:8]
                     #print cloudbase
                     entries[3] = int(cloudbase)
 
                 if(count=="2"): #two cloudbases
-                    cloudbase=data[t+2][4:8]
+                    cloudbase=status[4:8]
                     #print cloudbase
                     entries[3] = int(cloudbase)
 
-                    cloudbase_t=data[t+2][10:14]
+                    cloudbase_t=status[10:14]
                     #print cloudbase_t
                     entries[4] = int(cloudbase_t)
 
                 if(count=="3"): # three cloudbases
-                    cloudbase=data[t+2][4:8]
+                    cloudbase=status[4:8]
                     #print cloudbase
                     entries[3] = int(cloudbase)
-                    cloudbase_t=data[t+2][10:14]
+                    cloudbase_t=status[10:14]
                     #print cloudbase_t
                     entries[4] = int(cloudbase_t)
-                    cloudbase_g=data[t+2][16:20]
+                    cloudbase_g=status[16:20]
                     #print cloudbase_g
                     entries[5] = int(cloudbase_g)
 
                 if(count=="4"): # 4 in Fog (No cloudbase will be measured.... vertical visibility instead), Full obscuration
                    entries[1] = "FO"
-                   #print data[t+2]
+                   #print status
                 if(count=="5"): #5 in Fog (No cloudbase will be measured.... vertical visibility instead), Partly opaque
                     entries[1] = "OPQ"
-                    #print data[t+2]
+                    #print status
 
                 self.records[time_stamp] = entries
 
@@ -286,7 +302,7 @@ class CL31day:
 ##    out.write(klasse.write_stat_string())
 
 
-import tarfile
+##import tarfile
 
 sun_dict = {1: [('07', '20', '00'), ('15', '50', '00')],
             2: [('06', '37', '00'), ('16', '40', '00')],
@@ -304,7 +320,9 @@ sun_dict = {1: [('07', '20', '00'), ('15', '50', '00')],
 
 cl31_dir = "w:/Bendix/CL31/TEXT"
 
-stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016.csv"
+##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016.csv"
+##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016_7-9.csv"
+stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2008-2016.csv"
 ##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_sun.csv"
 
 with open(stats_file, "w") as s:
@@ -315,8 +333,8 @@ with open(stats_file, "w") as s:
     for root, sub, files in os.walk(cl31_dir):
         base_dir = os.path.basename(root)
         print(base_dir)
-        if  base_dir == "2008" or base_dir == "2009":
-            continue
+##        if  base_dir == "2008" or base_dir == "2009":
+##            continue
         for file in files:
             filename = os.path.join(root, file)
 
@@ -336,6 +354,7 @@ with open(stats_file, "w") as s:
 
                 Klasse = CL31day(filename, raw_data)
                 Klasse.compute_stats(srise, sset)
+##                Klasse.compute_stats(('07', '00', '00'), ('09', '00', '00'))
                 s.write(Klasse.write_stat_string())
                 s.write("\n")
 
