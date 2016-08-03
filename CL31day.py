@@ -53,6 +53,9 @@ class CL31day:
 
         for x, line in enumerate(data): #Run until last row of file (EOF)
 
+            if line.__contains__("VS01") or len(line) > 27:
+                continue
+
                       #Date,Type,Frag,CB1,CB2,CB3
             entries = [None,None,None,None,None,None]
 
@@ -322,7 +325,8 @@ cl31_dir = "w:/Bendix/CL31/TEXT"
 
 ##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016.csv"
 ##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2010-2016_7-9.csv"
-stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2008-2016.csv"
+##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2008-2016.csv"
+stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_2008-2016_7-9.csv"
 ##stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_sun.csv"
 
 with open(stats_file, "w") as s:
@@ -353,8 +357,8 @@ with open(stats_file, "w") as s:
                 sset = sun_dict[month][1]
 
                 Klasse = CL31day(filename, raw_data)
-                Klasse.compute_stats(srise, sset)
-##                Klasse.compute_stats(('07', '00', '00'), ('09', '00', '00'))
+##                Klasse.compute_stats(srise, sset)
+                Klasse.compute_stats(('07', '00', '00'), ('09', '00', '00'))
                 s.write(Klasse.write_stat_string())
                 s.write("\n")
 
