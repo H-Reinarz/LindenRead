@@ -53,7 +53,7 @@ class CL31day:
 
         for x, line in enumerate(data): #Run until last row of file (EOF)
 
-            if line.__contains__("VS01") or len(line) > 27:
+            if line.__contains__("VS01") or len(line) > 30:
                 continue
 
                       #Date,Type,Frag,CB1,CB2,CB3
