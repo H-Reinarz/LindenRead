@@ -15,10 +15,16 @@ import os
 def ts_decode(time_stamp):
     """Function to convert tuple time stamp to
     elapsed seconds of the day (integer)."""
-    s = int(time_stamp[2])
-    ms = int(time_stamp[1]) * 60
-    hs = int(time_stamp[0]) * 3600
-    return(hs + ms + s)
+    if type(time_stamp) == tuple:
+        s = int(time_stamp[2])
+        ms = int(time_stamp[1]) * 60
+        hs = int(time_stamp[0]) * 3600
+        return(hs + ms + s)
+    elif type(time_stamp) == int:
+        return
+    else:
+        print("WRONG TIME STAMP")
+        raise TypeError
 
 
 
