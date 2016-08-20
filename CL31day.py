@@ -21,11 +21,32 @@ def ts_decode(time_stamp):
         hs = int(time_stamp[0]) * 3600
         return(hs + ms + s)
     elif type(time_stamp) == int:
-        return
+        return(time_stamp)
     else:
         print("WRONG TIME STAMP")
         raise TypeError
 
+def ts_encode(time_stamp):
+    """Function to convert elapsed seconds of the day (integer)
+    to tuple time stamp."""
+    if type(time_stamp) == int:
+        h = str(time_stamp//3600)
+        mindiff = time_stamp % 3600
+        minu = str(mindiff // 60)
+        sec = str(mindiff % 60)
+        t = [h, minu, sec]
+        for n,x in enumerate(t):
+            if len(x) == 1:
+                t[n] = "0" + x
+            else:
+                pass
+        return(tuple(t))
+
+    elif type(time_stamp) == tuple:
+        return(time_stamp)
+    else:
+        print("WRONG TIME STAMP")
+        raise TypeError
 
 
 class CL31day:
