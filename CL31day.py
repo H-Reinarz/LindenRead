@@ -318,9 +318,9 @@ class CL31day:
 
 
 #Test
-##file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
-##with open(file, "r") as f:
-##   klasse = CL31day(file, f.readlines())
+file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
+with open(file, "r") as f:
+   klasse = CL31day(file, f.readlines())
 ##
 ##print(klasse.filename)
 ##klasse.compute_stats()
@@ -332,7 +332,23 @@ class CL31day:
 ##    out.write(klasse.write_stat_string())
 
 
+start_time = ('23', '39', '43')
+limit = 1
+
+m = 0
+clouds = 0
+perc = 0
+
+for k,v in reversed(klasse.records.items()):
+    if not ts_decode(k) <= ts_decode(start_time):
+        continue
+    else:
+        m += 1
+        if not v[1] == "CLEAR":
+            clouds += 1
+        perc = (clouds/m) * 100
+        if perc >= limit:
+            break
 
 
-
-
+print("M:", m, "C:", clouds, "P:", perc)
