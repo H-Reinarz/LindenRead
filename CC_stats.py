@@ -31,7 +31,7 @@ cc_limit = 1
 cl31_dir = "w:/Bendix/CL31/TEXT"
 
 
-stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_cc_1.csv"
+stats_file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31_stats_11-14_cc_1.csv"
 
 with open(stats_file, "w") as s:
     s.write(CL31day.write_cc_header())
@@ -59,7 +59,7 @@ with open(stats_file, "w") as s:
                 Klasse = CL31day(filename, raw_data)
 
                 #Set window for analyzing
-                zenit = ZT[file[-12:-4]]
+                zenit = ZT[file[9:17]]
 
                 #Analyze
                 Klasse.compute_concentric_clears(zenit, cc_limit)
