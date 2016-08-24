@@ -61,6 +61,10 @@ class CL31day:
     stats_meta = ("FILE","YEAR", "MONTH", "DAY")
     stats_fields = ("START", "END", "MEASUREMENTS", "CLEAR", "FO", "OPQ", "CD_MEDIAN", "CB1", "CB1_MIN", "CB1_MAX", "CB1_MEDIAN", "CB1_MODE", "CB2", "CB2_MEDIAN", "CB3", "CB3_MEDIAN")
 
+
+    #Concentric Clears
+    cc_fields = ('START_TIME', 'LIMIT', 'FM', 'FP', 'BM', 'BP')
+
     #Class Methods
     #Headerstring for file output
     def write_record_header(seperator=","):
@@ -69,6 +73,10 @@ class CL31day:
     #Headerstring for file output
     def write_stats_header(seperator=","):
         return seperator.join(CL31day.stats_meta + CL31day.stats_fields)
+
+    #Headerstring for CC
+    def write_cc_header(seperator=","):
+        return seperator.join(CL31day.stats_meta + CL31day.cc_fields)
 
 
 
@@ -307,10 +315,83 @@ class CL31day:
 
 
 
+    def compute_concentric_clears(self, start_time, limit):
+        """blub"""
+        class ConcentClears:
+            def __init__(self, CL31d, st, lmt):
+                self.start_time = st
+                self.limit = lmt
+
+                #FORWARD
+                fm = 0
+                fclouds = 0
+                fp = 0
+
+                for k,v in CL31d.records.items():
+                    if not ts_decode(k) >= ts_decode(st):
+                        continue
+                    else:
+                        fm += 1
+                        if not v[1] == "CLEAR":
+                            fclouds += 1
+                        fp = round((fclouds/fm) * 100)
+                        if fp >= lmt:
+                            break
+
+                self.fm = fm
+                self.fp = fp
+
+                #BACKWARD
+                rev_records = OrderedDict()
+                for k in reversed(list(CL31d.records.keys())):
+                    rev_records[k] = CL31d.records[k]
+
+                bm = 0
+                bclouds = 0
+                bp = 0
+
+
+                for k,v in rev_records.items():
+                    if not ts_decode(k) <= ts_decode(st):
+                        continue
+                    else:
+                        bm += 1
+                        if not v[1] == "CLEAR":
+                            bclouds += 1
+                        bp = (bclouds/bm) * 100
+                        if bp >= lmt:
+                            break
+
+
+                self.bm = bm
+                self.bp = bp
+
+
+        #RETURN
+        self.ConcentClears = ConcentClears(self, start_time, limit)
 
 
 
+    #Return a seperated string of the attributes for file output
+    def write_cc_string(self, seperator=","):
+        #Get date elements from filename
+        year = self.filename[9:13]
+        month = self.filename[13:15]
+        day = self.filename[15:17]
 
+        #Convert complex elements to writable strings
+        field_dict = {f: self.ConcentClears.__getattribute__(f.lower()) for f in CL31day.cc_fields}
+        field_dict["START_TIME"] = ":".join(field_dict["START_TIME"])
+        for  k, v in field_dict.items():
+            #print(v)
+            if v == None:
+                field_dict[k] = "NA"
+
+        field_strings = [str(field_dict[f]) for f in CL31day.cc_fields]
+        meta_strings = [self.filename, year, month, day]
+
+        #Return the complete line
+        return seperator.join(meta_strings + field_strings)
 
 
 
@@ -321,6 +402,59 @@ class CL31day:
 file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
+
+
+
+
+class ConcentClears:
+    def __init__(self, CL31d, st, lmt):
+        self.start_time = st
+        self.limit = lmt
+
+        #FORWARD
+        fm = 0
+        fclouds = 0
+        fp = 0
+
+        for k,v in CL31d.records.items():
+            if not ts_decode(k) >= ts_decode(st):
+                continue
+            else:
+                fm += 1
+                if not v[1] == "CLEAR":
+                    fclouds += 1
+                fp = round((fclouds/fm) * 100)
+                if fp >= lmt:
+                    break
+
+        self.fm = fm
+        self.fp = fp
+
+        #BACKWARD
+        rev_records = OrderedDict()
+        for k in reversed(list(CL31d.records.keys())):
+            rev_records[k] = CL31d.records[k]
+
+        bm = 0
+        bclouds = 0
+        bp = 0
+
+
+        for k,v in rev_records.items():
+            if not ts_decode(k) <= ts_decode(st):
+                continue
+            else:
+                bm += 1
+                if not v[1] == "CLEAR":
+                    bclouds += 1
+                bp = round((bclouds/bm) * 100)
+                if bp >= lmt:
+                    break
+
+
+        self.bm = bm
+        self.bp = bp
+
 ##
 ##print(klasse.filename)
 ##klasse.compute_stats()
@@ -332,23 +466,23 @@ with open(file, "r") as f:
 ##    out.write(klasse.write_stat_string())
 
 
-start_time = ('23', '39', '43')
-limit = 1
-
-m = 0
-clouds = 0
-perc = 0
-
-for k,v in reversed(klasse.records.items()):
-    if not ts_decode(k) <= ts_decode(start_time):
-        continue
-    else:
-        m += 1
-        if not v[1] == "CLEAR":
-            clouds += 1
-        perc = (clouds/m) * 100
-        if perc >= limit:
-            break
-
-
-print("M:", m, "C:", clouds, "P:", perc)
+##start_time = ('23', '39', '43')
+##limit = 1
+##
+##m = 0
+##clouds = 0
+##perc = 0
+##
+##for k,v in klasse.records.items():
+##    if not ts_decode(k) >= ts_decode(start_time):
+##        continue
+##    else:
+##        m += 1
+##        if not v[1] == "CLEAR":
+##            clouds += 1
+##        perc = round((clouds/m) * 100)
+##        if perc >= limit:
+##            break
+##
+##
+##print("M:", m, "C:", clouds, "P:", perc)
