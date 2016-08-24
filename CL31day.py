@@ -406,54 +406,6 @@ with open(file, "r") as f:
 
 
 
-class ConcentClears:
-    def __init__(self, CL31d, st, lmt):
-        self.start_time = st
-        self.limit = lmt
-
-        #FORWARD
-        fm = 0
-        fclouds = 0
-        fp = 0
-
-        for k,v in CL31d.records.items():
-            if not ts_decode(k) >= ts_decode(st):
-                continue
-            else:
-                fm += 1
-                if not v[1] == "CLEAR":
-                    fclouds += 1
-                fp = round((fclouds/fm) * 100)
-                if fp >= lmt:
-                    break
-
-        self.fm = fm
-        self.fp = fp
-
-        #BACKWARD
-        rev_records = OrderedDict()
-        for k in reversed(list(CL31d.records.keys())):
-            rev_records[k] = CL31d.records[k]
-
-        bm = 0
-        bclouds = 0
-        bp = 0
-
-
-        for k,v in rev_records.items():
-            if not ts_decode(k) <= ts_decode(st):
-                continue
-            else:
-                bm += 1
-                if not v[1] == "CLEAR":
-                    bclouds += 1
-                bp = round((bclouds/bm) * 100)
-                if bp >= lmt:
-                    break
-
-
-        self.bm = bm
-        self.bp = bp
 
 ##
 ##print(klasse.filename)
