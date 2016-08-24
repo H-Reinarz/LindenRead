@@ -334,7 +334,7 @@ class CL31day:
                         fm += 1
                         if not v[1] == "CLEAR":
                             fclouds += 1
-                        fp = round((fclouds/fm) * 100)
+                        fp = round((fclouds/fm) * 100, ndigits=2)
                         if fp >= lmt:
                             break
 
@@ -358,7 +358,7 @@ class CL31day:
                         bm += 1
                         if not v[1] == "CLEAR":
                             bclouds += 1
-                        bp = (bclouds/bm) * 100
+                        bp = round((bclouds/bm) * 100, ndigits=2)
                         if bp >= lmt:
                             break
 
