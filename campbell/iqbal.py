@@ -1,43 +1,44 @@
 # Wird nach dem R Script campel1.R aufgerufen.
 import calendar
 import subprocess
+from collections import OrderedDict
 
 #### VARIABLES ####
 # Inital File from iqbal
-initalFile = r"H:/Informatik/PythonApplications/iqbal/iqbal/initial.dat"
+initalFile = r"C:/geography/bendix/work/iqbal_v2/initial.dat"
 # Result File from iqbal
-qtopo = r"H:/Informatik/PythonApplications/iqbal/iqbal/qtopo.txt"
+qtopo = r"C:/geography/bendix/work/iqbal_v2/qtopo.txt"
 # CNR4 Table
-fileDF = r"h:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013.dat"
+fileDF = r"C:/geography/bendix/work/zwischenergebnis/CNR4-2013.dat"
 # Final Result (CNR4 Table with iqbal Value)
-table = "h:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013_iqbal.dat"
+table = "C:/geography/bendix/work/zwischenergebnis/CNR4-2013_iqbal.dat"
 
-transDict = {}
+transDict = OrderedDict()
 
 
 #### START ####
 fDF = open(fileDF,"r")
 # Iterate over every CNR4 Value
 for index, DFlines in enumerate(fDF):
-    print(index,"bob")
+    #print(index)
+    tmpList = []
 
     if index > 0:
-		
-		#### SEPERATE TIMESTAMP ####
+        #### SEPERATE TIMESTAMP ####
         # Split by Seperator
-		tmpDF = DFlines.split(";",1)
-		# tmpDF[0] = Date; tmpDF[1] = All other columns
-		# Seperate Date from Time:
+        tmpDF = DFlines.split(";",1)
+        # tmpDF[0] = Date; tmpDF[1] = All other columns
+        # Seperate Date from Time:
         tmpDF = tmpDF[0].split(" ")
         date = tmpDF[0]
         time = tmpDF[1]
         
-		# Stores Date(0 = Year, 1 = Month, 2 = Day)
+        # Stores Date(0 = Year, 1 = Month, 2 = Day)
         dateList = date.split("-")
-		# Stores Time(0 = Year, 1 = Month, 2 = Day)
+        # Stores Time(0 = Year, 1 = Month, 2 = Day)
         timeList = time.split(":")
-		
-		# Store Day, Month, schaltjahr and time
+        
+        # Store Day, Month, schaltjahr and time
         day = dateList[2]
         month = dateList[1]
         
@@ -70,42 +71,42 @@ for index, DFlines in enumerate(fDF):
                 seconds = "0"
             else:
                 seconds = seconds[1]
-		
-		#### OPEN IQBAL ####
+        
+        #### OPEN IQBAL ####
         f = open(initalFile,"r")
         for idx, lines in enumerate(f):
             
-			# Day
+            # Day
             if idx ==  2: 
                 tmpSplitList = lines.split('\t')
                 lines = day + "\t" + tmpSplitList[1]
                 tmpList.append(lines)
-			# Month
+            # Month
             elif idx == 3:
                 tmpSplitList = lines.split('\t')
                 lines = month + "\t" + tmpSplitList[1]
                 tmpList.append(lines)
-			# Leap Year
+            # Leap Year
             elif idx == 4:
                 tmpSplitList = lines.split('\t')
                 lines = schaltjahr + "\t" + tmpSplitList[1]
                 tmpList.append(lines)
-			#Time 
+            #Time 
             elif idx == 5:
                 tmpSplitList = lines.split('!')
                 lines = hour + "  " + minute + "   " + seconds + "     !" + tmpSplitList[1]
                 tmpList.append(lines)
-			# Kill every Line greater than Line 19 (qtopo)
+            # Kill every Line greater than Line 19 (qtopo)
             elif idx > 19:
                 pass
-			# Append every other Line
+            # Append every other Line
             else:
                 #tmpSplitList = lines.split('!')             
                 #lines = tmpSplitList[0] + "!" + tmpSplitList[1]
                 tmpList.append(lines)
         f.close()
 
-		#### WRITE IQBAL ####
+        #### WRITE IQBAL ####
         # Write new lines to initalFile
         g = open(initalFile, 'w' ,) #encoding ='utf8')  
 
@@ -114,30 +115,31 @@ for index, DFlines in enumerate(fDF):
             g.write(linesW)
         g.close()	
 
-		#### EXECUTE IQBAL ####
-        cmd = 'H:/Informatik/PythonApplications/iqbal/iqbal/iqbal_v2.exe'
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        #### EXECUTE IQBAL ####
+        cmd = 'C:/geography/bendix/work/iqbal_v2/iqbal_v2.exe'
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd = "C:/geography/bendix/work/iqbal_v2")
         p.wait()
        
-		#### READ RESULTS ####
+        #### READ RESULTS ####
         e = open(qtopo,"r")
 
         for rIdx, rLines in enumerate(e):
             if rIdx == 47:
-                l = []
-                for t in rLines.split():
-                    try:
-                        l.append(float(t))
-                    except ValueError:
-                        pass
-
-                bob = rLines
-
-                transDict[date]=l[0]
+                rLines = rLines.replace(" ","")
+                rLines = rLines.split(":")
+                radiationTAO = float(rLines[1])
+            if rIdx == 49:
+                rLines = rLines.replace(" ","")
+                radiationGround = float(rLines)
+            if rIdx == 54:
+                rLines = rLines.replace(" ","")
+                rLines = rLines.split(":")
+                aerosolEffect = float(rLines[1])
         e.close()
-
-      
-
+        
+        #### CALCULATE IQBAL RADIATION WITHOUT AEROSOL EFFECT
+        radiation = (radiationTAO-aerosolEffect)+radiationGround
+        transDict[date]=radiation
 fDF.close()
 
 w = open(table, 'w' ,) #encoding ='utf8')  
