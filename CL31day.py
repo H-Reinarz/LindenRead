@@ -183,6 +183,16 @@ class CL31day:
                 self.records[k][2] = diff
 
 
+    def records_generator(self, fields=[]):
+        """Generator for iterating over a records dictionary. A subset of fields is selectable (default = all)."""
+        for key, entries in self.records:
+            if len(fields) != 0:
+                subset = [entries[field] for field in fields]
+            else:
+                subset = entries
+            yield key, subset
+
+
 
     def compute_stats(self, start=("00","00","00"), end=("23","59","59")):
         """Computes the statistics for the records and stores them as attributes."""
