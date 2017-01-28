@@ -185,12 +185,46 @@ class CL31day:
 
     def records_generator(self, fields=[]):
         """Generator for iterating over a records dictionary. A subset of fields is selectable (default = all)."""
-        for key, entries in self.records:
+        for key, entries in self.records.items():
             if len(fields) != 0:
                 subset = [entries[field] for field in fields]
             else:
                 subset = entries
             yield key, subset
+
+    def compute_clear_windows(self, start=("00","00","00"), end=("23","59","59"), duration=60, tolerance=2):
+        """blub"""
+        dur = duration * 3
+        #carry_on = lambda clears, clouds: not len(clear_count) +
+
+        rec_iterator = self.records_generator(fields=1)
+        for key, value in rec_iterator:
+            value = value[0]
+
+            if value == "CLEAR":
+                begin = value
+                clear_count = []
+                clear_count.append(begin)
+                cloud_count = []
+
+                while begin:
+                    sub_key, sub_value = next(rec_iterator)
+                    sub_value = sub_value[0]
+
+                    if sub_value == "CLEAR":
+                        clear_count.append(sub_key)
+                    else:
+                        cloud_count.append(sub_key)
+
+
+
+
+
+
+            else:
+                begin = None
+
+
 
 
 
@@ -413,8 +447,13 @@ file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
 
+x = klasse.records_generator(fields=[1])
 
 
+for y in range(20):
+    key, value = next(x)
+    print(key)
+    print(value)
 
 
 ##
