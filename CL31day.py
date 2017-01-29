@@ -65,6 +65,10 @@ class CL31day:
     #Concentric Clears
     cc_fields = ('START_TIME', 'LIMIT', 'FM', 'FP', 'BM', 'BP')
 
+    #Clear window fields
+    clwin_fields = ("ID","FILE","YEAR", "MONTH", "DAY", "START", "END", "DURATION", "TOLERANCE", "WIN_START", "WIN_END")
+
+
     #Class Methods
     #Headerstring for file output
     def write_record_header(seperator=","):
@@ -77,6 +81,11 @@ class CL31day:
     #Headerstring for CC
     def write_cc_header(seperator=","):
         return seperator.join(CL31day.stats_meta + CL31day.cc_fields)
+
+    #Headerstring for ClWin
+    def write_clwin_header(seperator=","):
+        return seperator.join(CL31day.clwin_fields)
+        #return seperator.join(CL31day.stats_meta + CL31day.clwin_fields)
 
 
 
@@ -192,49 +201,103 @@ class CL31day:
                 subset = entries
             yield key, subset
 
-    def compute_clear_windows(self, start=("00","00","00"), end=("23","59","59"), duration=60, tolerance=2):
+    def compute_clear_windows(self, start_time=("00","00","00"), end_time=("23","59","59"), duration=60, tolerance=2):
         """blub"""
-        #Initialize clear window dictionary
-        self.clear_windows = OrderedDict()
 
-        #set up counter and function for generating window identifiers
-        win_counter = 0
-        make_win_id = lambda: "".join(reversed(self.date.split("."))) + "_" + str(win_counter).zfill(3)
+        class ClearWindows:
+            def __init__(self, CL31d, start, end, dur, tol):
+                #Attributes
+                self.start = start
+                self.end = end
+                self.duration = dur
+                self.tolerance = tol
 
-        #Boolean functions for testing against maximum duration and tolerance of a window during loop
-        max_dur = lambda clears, clouds: len(clears) + len(clouds) >= duration * 3
-        max_tol = lambda clears, clouds: (len(cloud_count)/(duration * 3))*100 >= tolerance
+                #Initialize clear window dictionary
+                self.records = OrderedDict()
+
+                #set up counter and function for generating window identifiers
+                win_counter = 0
+                make_win_id = lambda: "".join(reversed(CL31d.date.split("."))) + "_" + str(win_counter).zfill(3)
+
+                #Boolean functions for testing against maximum duration and tolerance of a window during loop
+                max_dur = lambda clears, clouds: len(clears) + len(clouds) >= dur * 3
+                max_tol = lambda clears, clouds: (len(cloud_count)/(duration * 3))*100 >= tol
 
 
-        rec_iterator = self.records_generator(fields=1)
-        for key, value in rec_iterator:
-            value = value[0]
+                rec_iterator = CL31d.records_generator(fields=[1])
+                for key, value in rec_iterator:
+                    value = value[0]
 
-            if value == "CLEAR":
-                begin = value
-                clear_count = []
-                clear_count.append(begin)
-                cloud_count = []
+                    if value == "CLEAR":
+                        begin = value
+                        clear_count = []
+                        clear_count.append(key)
+                        cloud_count = []
 
-                while begin:
-                    sub_key, sub_value = next(rec_iterator)
-                    sub_value = sub_value[0]
+                        while begin:
+                            try:
+                                sub_key, sub_value = next(rec_iterator)
+                            except StopIteration:
+                                ##print("Reached end of records: ", sub_key, sub_value)
+                                del rec_iterator, sub_key, sub_value
+                                break
 
-                    if sub_value == "CLEAR":
-                        clear_count.append(sub_key)
+                            sub_value = sub_value[0]
+
+                            if sub_value == "CLEAR":
+                                clear_count.append(sub_key)
+                            else:
+                                cloud_count.append(sub_key)
+
+                            #Terminate the loop and save the window if appropriate
+                            if max_dur(clear_count, cloud_count) or max_tol(clear_count, cloud_count):
+                                if max_dur(clear_count, cloud_count):
+                                    win_counter += 1
+                                    ##print(clear_count)
+                                    self.records[make_win_id()] = [clear_count[0], sub_key]
+                                break
+
                     else:
-                        cloud_count.append(sub_key)
+                        begin = None
 
-                    #Terminate the loop and save the window if appropriate
-                    if max_dur(clear_count, cloud_count) or max_tol(clear_count, cloud_count):
-                        if max_dur(clear_count, cloud_count):
-                            win_counter += 1
-                            #win_id = make_win_id()
-                            self.clear_windows[make_win_id()] = [clear_count[0], sub_key]
-                        break
+        self.ClearWindows = ClearWindows(self, start_time, end_time, duration, tolerance)
+        return
 
-            else:
-                begin = None
+    #Return a seperated string of the attributes for file output
+    def write_clwin_csv(self, seperator=",", fileobj):
+        #Get date elements from filename
+        year = self.filename[9:13]
+        month = self.filename[13:15]
+        day = self.filename[15:17]
+
+        field_dict = {f: self.ClearWindows.__getattribute__(f.lower()) for f in ("START", "END", "DURATION", "TOLERANCE")}
+        field_dict["START"] = ":".join(field_dict["START"])
+        field_dict["END"] = ":".join(field_dict["END"])
+        field_dict["FILE"] = self.filename
+        field_dict["YEAR"] = year
+        field_dict["MONTH"] = month
+        field_dict["DAY"] = day
+
+
+        indiv_fields = ("ID", "WIN_START", "WIN_END")
+        for ID, record in self.ClearWindows.records.items():
+                field_dict["ID"] = ID
+                field_dict["WIN_START"] = record[0]
+                field_dict["WIN_START"] = ":".join(field_dict["WIN_START"])
+
+                field_dict["WIN_END"] = record[1]
+                field_dict["WIN_END"] = ":".join(field_dict["WIN_END"])
+
+                for  k, v in field_dict.items():
+                    #print(v)
+                    if v == None:
+                        field_dict[k] = "NA"
+
+                field_strings = [str(field_dict[f]) for f in CL31day.clwin_fields]
+                #Write the complete line
+                fileobj.write(seperator.join(field_strings))
+
+
 
 
 
@@ -459,8 +522,9 @@ file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
 
-klasse.compute_clear_windows()
+#klasse.compute_clear_windows(duration=1, tolerance=100)
 
+print(CL31day.write_clwin_header())
 ##x = klasse.records_generator(fields=[1])
 ##
 ##print(klasse.date)
