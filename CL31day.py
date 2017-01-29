@@ -194,8 +194,17 @@ class CL31day:
 
     def compute_clear_windows(self, start=("00","00","00"), end=("23","59","59"), duration=60, tolerance=2):
         """blub"""
-        dur = duration * 3
-        #carry_on = lambda clears, clouds: not len(clear_count) +
+        #Initialize clear window dictionary
+        self.clear_windows = OrderedDict()
+
+        #set up counter and function for generating window identifiers
+        win_counter = 0
+        make_win_id = lambda: "".join(reversed(self.date.split("."))) + "_" + str(win_counter).zfill(3)
+
+        #Boolean functions for testing against maximum duration and tolerance of a window during loop
+        max_dur = lambda clears, clouds: len(clears) + len(clouds) >= duration * 3
+        max_tol = lambda clears, clouds: (len(cloud_count)/(duration * 3))*100 >= tolerance
+
 
         rec_iterator = self.records_generator(fields=1)
         for key, value in rec_iterator:
@@ -216,10 +225,13 @@ class CL31day:
                     else:
                         cloud_count.append(sub_key)
 
-
-
-
-
+                    #Terminate the loop and save the window if appropriate
+                    if max_dur(clear_count, cloud_count) or max_tol(clear_count, cloud_count):
+                        if max_dur(clear_count, cloud_count):
+                            win_counter += 1
+                            #win_id = make_win_id()
+                            self.clear_windows[make_win_id()] = [clear_count[0], sub_key]
+                        break
 
             else:
                 begin = None
@@ -447,13 +459,16 @@ file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
 
-x = klasse.records_generator(fields=[1])
+klasse.compute_clear_windows()
 
-
-for y in range(20):
-    key, value = next(x)
-    print(key)
-    print(value)
+##x = klasse.records_generator(fields=[1])
+##
+##print(klasse.date)
+##
+##for y in range(20):
+##    key, value = next(x)
+##    print(key)
+##    print(value)
 
 
 ##
