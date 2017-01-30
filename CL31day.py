@@ -219,6 +219,9 @@ class CL31day:
                 win_counter = 0
                 make_win_id = lambda: "".join(reversed(CL31d.date.split("."))) + "_" + str(win_counter).zfill(3)
 
+                #Boolean function for skipping records outside daylight
+                during_daylight = lambda k: ts_decode(start) <= ts_decode(k) <= ts_decode(end)
+
                 #Boolean functions for testing against maximum duration and tolerance of a window during loop
                 max_dur = lambda clears, clouds: len(clears) + len(clouds) >= dur * 3
                 max_tol = lambda clears, clouds: (len(cloud_count)/(duration * 3))*100 >= tol
@@ -226,6 +229,11 @@ class CL31day:
 
                 rec_iterator = CL31d.records_generator(fields=[1])
                 for key, value in rec_iterator:
+
+                    #skipp values before sunrise and after sunset
+                    if not during_daylight(key):
+                        continue
+
                     value = value[0]
 
                     if value == "CLEAR":
@@ -264,7 +272,8 @@ class CL31day:
         return
 
     #Return a seperated string of the attributes for file output
-    def write_clwin_csv(self, seperator=",", fileobj):
+    def write_clwin_strings(self, seperator=","):
+        clw_lines = []
         #Get date elements from filename
         year = self.filename[9:13]
         month = self.filename[13:15]
@@ -295,8 +304,8 @@ class CL31day:
 
                 field_strings = [str(field_dict[f]) for f in CL31day.clwin_fields]
                 #Write the complete line
-                fileobj.write(seperator.join(field_strings))
-
+                clw_lines.append(seperator.join(field_strings) + "\n")
+        return clw_lines
 
 
 
@@ -521,10 +530,14 @@ class CL31day:
 file = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CL31msg2_20150101.txt"
 with open(file, "r") as f:
    klasse = CL31day(file, f.readlines())
+   file2 = "d:\\Studium_EnvGEo\\Zweites_Semester\\Bendix\\Dev\\CLear_Window_Test.csv"
+   with open(file2, "w") as f2:
+    klasse.compute_clear_windows(duration=1, tolerance=100)
 
-#klasse.compute_clear_windows(duration=1, tolerance=100)
+    f2.write(CL31day.write_clwin_header())
+    f2.write("\n")
+    f2.writelines(klasse.write_clwin_strings())
 
-print(CL31day.write_clwin_header())
 ##x = klasse.records_generator(fields=[1])
 ##
 ##print(klasse.date)
