@@ -5,13 +5,13 @@ from collections import OrderedDict
 
 #### VARIABLES ####
 # Inital File from iqbal
-initalFile = r"C:/geography/bendix/work/iqbal_v2/initial.dat"
+initalFile = r"H:/Geography/aerosol/iqbal_v2/initial.dat"
 # Result File from iqbal
-qtopo = r"C:/geography/bendix/work/iqbal_v2/qtopo.txt"
+qtopo = r"H:/Geography/aerosol/iqbal_v2/qtopo.txt"
 # CNR4 Table
-fileDF = r"C:/geography/bendix/work/zwischenergebnis/CNR4-2013.dat"
+fileDF = r"H:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013.dat"
 # Final Result (CNR4 Table with iqbal Value)
-table = "C:/geography/bendix/work/zwischenergebnis/CNR4-2013_iqbal.dat"
+table = "H:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013_iqbal.dat"
 
 transDict = OrderedDict()
 
@@ -116,8 +116,8 @@ for index, DFlines in enumerate(fDF):
         g.close()	
 
         #### EXECUTE IQBAL ####
-        cmd = 'C:/geography/bendix/work/iqbal_v2/iqbal_v2.exe'
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd = "C:/geography/bendix/work/iqbal_v2")
+        cmd = 'H:/Geography/aerosol/iqbal_v2/iqbal_v2.exe'
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd = "H:/Geography/aerosol/iqbal_v2")
         p.wait()
        
         #### READ RESULTS ####
@@ -144,7 +144,8 @@ fDF.close()
 
 w = open(table, 'w' ,) #encoding ='utf8')  
 
- # Write line by line
+# Write line by line
+w.write("Date;RadIqbal\n")
 for key,value in transDict.items():
 
     #wVar = key,";",transDict[key]
