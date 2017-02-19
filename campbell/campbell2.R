@@ -30,17 +30,18 @@ for (year in YEARS){
   # lapply-Schleife die jede Zeile einer .txt durchlaeuft
   awb <- lapply(files, function(x){
     #x <- files[1]
-    #print(x)
+    print(x)
     
     
     
     cnr <- read.table(x, sep=",", skip = 1, header=F)
-    
+    cnr <- cnr[!duplicated(cnr$V1),]
+    cnr <- cnr[order(cnr$V2),]
     
     if(is.na(as.POSIXct(as.character(cnr[1,1]), zt = "UTC", format="%Y-%m-%d %H:%M:%S" ) )){
        colnames(cnr) <- as.character(unlist(cnr[1,]))
-       cnr <- cnr[-(1:3),]
-       
+       cnr <- cnr[-1,]
+       colnames(cnr)[1] <- "TIMESTAMP"
     } else{
       colnames(cnr)[1] <- "TIMESTAMP"
           

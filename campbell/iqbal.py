@@ -2,6 +2,7 @@
 import calendar
 import subprocess
 from collections import OrderedDict
+from time import gmtime, strftime
 
 #### VARIABLES ####
 # Inital File from iqbal
@@ -9,12 +10,15 @@ initalFile = r"H:/Geography/aerosol/iqbal_v2/initial.dat"
 # Result File from iqbal
 qtopo = r"H:/Geography/aerosol/iqbal_v2/qtopo.txt"
 # CNR4 Table
-fileDF = r"H:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013.dat"
+fileDF = r"H:/Geography/aerosol/Data/zwischenergebnis2/CNR42012-2016_windows.csv"
 # Final Result (CNR4 Table with iqbal Value)
-table = "H:/Geography/aerosol/Data/zwischenergebnis/CNR4-2013_iqbal.dat"
+table = "H:/Geography/aerosol/Data/zwischenergebnis2/ResultIqbal.csv"
 
 transDict = OrderedDict()
 
+print("Start: ")
+strftime("%Y-%m-%d %H:%M:%S", gmtime())
+print("\n")
 
 #### START ####
 fDF = open(fileDF,"r")
@@ -23,15 +27,18 @@ for index, DFlines in enumerate(fDF):
     #print(index)
     tmpList = []
 
+    if index == 0:
+        head = DFlines
+
     if index > 0:
         #### SEPERATE TIMESTAMP ####
         # Split by Seperator
         tmpDF = DFlines.split(";",1)
         # tmpDF[0] = Date; tmpDF[1] = All other columns
         # Seperate Date from Time:
-        tmpDF = tmpDF[0].split(" ")
-        date = tmpDF[0]
-        time = tmpDF[1]
+        tmpDF1 = tmpDF[0].split(" ")
+        date = tmpDF1[0]
+        time = tmpDF1[1]
         
         # Stores Date(0 = Year, 1 = Month, 2 = Day)
         dateList = date.split("-")
@@ -117,7 +124,9 @@ for index, DFlines in enumerate(fDF):
 
         #### EXECUTE IQBAL ####
         cmd = 'H:/Geography/aerosol/iqbal_v2/iqbal_v2.exe'
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd = "H:/Geography/aerosol/iqbal_v2")
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd = "H:/Geography/aerosol/iqbal_v2", startupinfo=startupinfo)
         p.wait()
        
         #### READ RESULTS ####
@@ -139,25 +148,30 @@ for index, DFlines in enumerate(fDF):
         
         #### CALCULATE IQBAL RADIATION WITHOUT AEROSOL EFFECT
         radiation = (radiationTAO-aerosolEffect)+radiationGround
-        transDict[date]=radiation
+        # Iqbalvalue; Timestamp(tmpDF1); other columns
+        columns = str(radiation)+";"+tmpDF1[0]+" "+tmpDF1[1]+";"+str(tmpDF[1])
+        transDict[index]=columns
 fDF.close()
 
 w = open(table, 'w' ,) #encoding ='utf8')  
 
 # Write line by line
-w.write("Date;RadIqbal\n")
+w.write("IqbalID;RadIqbal;")
+w.write(head)
 for key,value in transDict.items():
 
     #wVar = key,";",transDict[key]
-    w.write(key)
+    w.write(str(key))
     w.write(";")
     w.write(str(value))
-    w.write("\n")
+    #w.write("\n")
 
 # Close file stream
 w.close()	
 
-
+print("End: ")
+strftime("%Y-%m-%d %H:%M:%S", gmtime())
+print("\n")
 
 
 

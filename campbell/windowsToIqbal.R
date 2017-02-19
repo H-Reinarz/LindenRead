@@ -28,32 +28,37 @@ cnrvalues$DATE <- as.Date(cnrvalues$DATE)
 dates <- unique(cnrvalues$DATE)
 result <- 0
 for(i in seq(1:nrow(windows))){
- #i<-400
+ i<-401
   if(!(windows$DATE[i] %in% dates)){
     
   } else{
     cnrWin <- cnrvalues[cnrvalues$DATE == windows$DATE[i],]
+    subset(cnrvalues, cnrvalues$DATE == windows$DATE[i])
     for(j in seq(1:nrow(cnrWin))){
       cnrWin$POSTIME[j] <- as.POSIXct(strptime(as.character(cnrWin$TIMESTAMP[j]), "%Y-%m-%d %H:%M:%S"))
+      #cnrWin$POSTIME[j] <- as.POSIXct(cnrWin$TIMESTAMP[j], "%Y-%m-%d %H:%M:%S", tz ="UTC")
     }
     cnrWin$POSTIME <- as.POSIXct(cnrWin$POSTIME, origin='1970-01-01 00:00.00 UTC')
     cnrWin <- subset(cnrWin, cnrWin$POSTIME <= windows$DATE_END[i] & cnrWin$POSTIME >= windows$DATE_START[i])
     
     cnrWin$ID <- windows$ID[i]
     cnrWin <- cbind(cnrWin, windows[i,10:13])
+    
+    if(is.data.frame(result)){
+      result <- rbind(result, cnrWin)
+    } else{
+      result <- cnrWin
+    }
   }
 
-  if(is.data.frame(result)){
-    result <- rbind(result, cnrWin)
-  } else{
-    result <- cnrWin
-  }
+
 }
 
 result$SECONDS <- NULL
 result$TIMEDECODE <- NULL
 result$POSTIME <- NULL
-
+write.table(result, "h:/Geography/aerosol/Data/zwischenergebnis2/CNR42012-2016_windows.csv", row.names = F, quote = F, sep = ";")
+length(unique(result$ID))
 
 # for(i in seq(1:nrow(cnrvalues))){
 #   cnrvalues$POSTIME[i] <- as.POSIXct(strptime(as.character(cnrvalues$TIMESTAMP[i]), "%Y-%m-%d %H:%M:%S"))
